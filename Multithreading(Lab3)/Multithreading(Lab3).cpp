@@ -53,9 +53,8 @@ void quickSort(int arr[], int low, int high) {
 
 int main()
 {
-    const int size = 10;
-    int array[size];
-    fillArray(array, size);
+    int array[ARRAY_SIZE];
+    fillArray(array, ARRAY_SIZE);
 
     int bubbleSortArray[ARRAY_SIZE];
     int quickSortArray[ARRAY_SIZE];
@@ -69,6 +68,7 @@ int main()
     bubbleSortThread.join();
     quickSortThread.join();
 
+    bubbleSortThread.
         
 
 }
