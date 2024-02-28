@@ -1,32 +1,47 @@
 ﻿#include <iostream>
+#include <Windows.h>
 #include <thread>
 #include <vector>
-#include <algorithm>
 #include <chrono>
+#include <windef.h>
+#include <processthreadsapi.h>
 
 using namespace std;
 
 const int ARRAY_SIZE = 10000;
 
-void fillArray(int arr[], int size) {
+void fillArray(vector<int> arr, int size) {
     srand(time(nullptr));
     for (int i = 0; i < size; ++i) {
-        arr[i] = rand() % 1000;
+        arr.push_back(rand() % 1000);
     }
 }
 
+struct bubbleSortData
+{
+    vector<int> arr;
+    int size;
+};
 
-void bubbleSort(int arr[], int size) {
-    for (int i = 0; i < size - 1; ++i) {
-        for (int j = 0; j < size - i - 1; ++j) {
-            if (arr[j] > arr[j + 1]) {
-                swap(arr[j], arr[j + 1]);
+struct quickSortData
+{
+    vector<int> arr;
+    int low;
+    int high;
+};
+
+
+DWORD WINAPI bubbleSort(LPVOID data) {
+    for (int i = 0; i < data.size - 1; ++i) {
+        for (int j = 0; j < data.size - i - 1; ++j) {
+            if (data.arr[j] > data.arr[j + 1]) {
+                swap(data.arr[j], data.arr[j + 1]);
             }
         }
     }
 }
 
-int partition(int arr[], int low, int high) {
+int partition(vector<int> arr, int low, int high) {
     int pivot = arr[high];
     int i = low - 1;
 
@@ -41,34 +56,60 @@ int partition(int arr[], int low, int high) {
     return i + 1;
 }
 
-void quickSort(int arr[], int low, int high) {
-    if (low < high) {
-        int pivotIndex = partition(arr, low, high);
+DWORD WINAPI quickSort(LPVOID data) {
+    if (data.low < data.high) {
+        int pivotIndex = partition(data.arr, data.low, data.high);
 
-        quickSort(arr, low, pivotIndex - 1);
-        quickSort(arr, pivotIndex + 1, high);
+        quickSortData newData;
+
+        newData.low = data.low;
+        newData.high = pivotIndex - 1;
+        quickSort(newData);
+
+        newData.low = pivotIndex + 1;
+        newData.high = data.high;
+        quickSort(newData);
     }
+}
+
+DWORD WINAPI func(LPVOID x)
+{
+    return 1;
 }
 
 
 int main()
 {
-    int array[ARRAY_SIZE];
+  
+    vector<int> array;
     fillArray(array, ARRAY_SIZE);
 
-    int bubbleSortArray[ARRAY_SIZE];
-    int quickSortArray[ARRAY_SIZE];
+    vector<int> bubbleSortArray = array;
+    vector<int> quickSortArray = array;
 
-    copy(begin(array), end(array), begin(bubbleSortArray));
-    copy(begin(array), end(array), begin(quickSortArray));
+    struct bubbleSortData bubbleData;
+    bubbleData.arr = bubbleSortArray;
+    bubbleData.size = ARRAY_SIZE;
 
-    std::thread bubbleSortThread(bubbleSort, bubbleSortArray, ARRAY_SIZE);
-    std::thread quickSortThread(quickSort, quickSortArray, 0, ARRAY_SIZE - 1);
+    struct quickSortData quickData;
+    quickData.arr = quickSortArray;
+    quickData.low = 0;
+    quickData.high = ARRAY_SIZE - 1;
+    
+    HANDLE threadBubbleSort = CreateThread(NULL, 0, &func, &bubbleData, 0, NULL);
 
-    bubbleSortThread.join();
-    quickSortThread.join();
+    HANDLE threadBubbleSort = CreateThread(NULL, 0, &bubbleSort, &bubbleData, 0, NULL);
+    HANDLE threadQuickSort = CreateThread(NULL, 0,  &quickSort, &quickData, 0, NULL);
 
-    bubbleSortThread.
-        
+    WaitForSingleObject(threadBubbleSort, INFINITE);
+    WaitForSingleObject(threadQuickSort, INFINITE);
 
+
+    //bubbleSortThread.get_id();
+    //bubbleSortThread.get_id();
+
+    //bubbleSortThread.join();
+    //quickSortThread.join();
+
+    //bubbleSortThread.
 }
