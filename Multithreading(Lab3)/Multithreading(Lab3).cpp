@@ -8,9 +8,9 @@
 
 using namespace std;
 
-const int ARRAY_SIZE = 10000;
+const int ARRAY_SIZE = 30000;
 
-void fillArray(vector<int> &arr, int size) {
+void fillArray(vector<int>& arr, int size) {
     srand(time(nullptr));
     for (int i = 0; i < size; ++i) {
         arr.push_back(rand() % 1000);
@@ -96,7 +96,7 @@ void printThreadTimes(HANDLE threadBubbleSortHandle)
 
 int main()
 {
-  
+
     vector<int> array;
     fillArray(array, ARRAY_SIZE);
 
@@ -113,22 +113,41 @@ int main()
     quickData.high = ARRAY_SIZE - 1;
 
 
-    cout << "Bubble sort:" << endl;
-    HANDLE threadBubbleSortHandle = CreateThread(NULL, CREATE_SUSPENDED, &bubbleSort, &bubbleData, 0, NULL);
-    ResumeThread(threadBubbleSortHandle);
-    SetThreadPriority(threadBubbleSortHandle, THREAD_PRIORITY_LOWEST);
-    WaitForSingleObject(threadBubbleSortHandle, INFINITE);
-    TerminateThread(threadBubbleSortHandle, 0);
-    printThreadTimes(threadBubbleSortHandle);
-    
-    cout << "Quick sort:" << endl;
-    HANDLE threadQuickSortHandle = CreateThread(NULL, CREATE_SUSPENDED, &quickSort, &quickData, 0, NULL);
+    HANDLE threadQuickSortHandle = CreateThread(NULL, 0, &quickSort, &quickData, CREATE_SUSPENDED, NULL);
+    HANDLE threadBubbleSortHandle = CreateThread(NULL, 0, &bubbleSort, &bubbleData, CREATE_SUSPENDED, NULL);
+
+    SetProcessPriorityBoost(threadQuickSortHandle, 0);
+    SetProcessPriorityBoost(threadBubbleSortHandle, 0);
+
+
+    SetThreadPriority(threadBubbleSortHandle, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(threadQuickSortHandle, THREAD_PRIORITY_LOWEST);
+
     ResumeThread(threadQuickSortHandle);
-    SetThreadPriority(threadQuickSortHandle, THREAD_PRIORITY_HIGHEST);
+    ResumeThread(threadBubbleSortHandle);
+
     WaitForSingleObject(threadQuickSortHandle, INFINITE);
+    WaitForSingleObject(threadBubbleSortHandle, INFINITE);
+
     TerminateThread(threadQuickSortHandle, 0);
+    TerminateThread(threadBubbleSortHandle, 0);
+
+    cout << "Quick sort:" << endl;
     printThreadTimes(threadQuickSortHandle);
+
+    cout << "Bubble sort:" << endl;
+    printThreadTimes(threadBubbleSortHandle);
 
     CloseHandle(threadBubbleSortHandle);
     CloseHandle(threadQuickSortHandle);
 }
+
+
+
+
+
+//SetProcessPriorityBoost
+//SetProcessAffinityMask
+
+
+
